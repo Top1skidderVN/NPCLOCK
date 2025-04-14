@@ -1,0 +1,193 @@
+-- Tạo GUI chính
+local playerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+local screenGui = playerGui:FindFirstChild("ESP_GUI") or Instance.new("ScreenGui")
+screenGui.Name = "ESP_GUI"
+screenGui.Parent = playerGui
+
+-- Tạo Frame chính
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 200, 0, 120)
+mainFrame.Position = UDim2.new(0.4, 0, 0.3, 0)
+mainFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+mainFrame.BorderSizePixel = 2
+mainFrame.Parent = screenGui
+mainFrame.Active = true
+mainFrame.Draggable = true -- Cho phép kéo thả GUI
+
+local uicorner = Instance.new("UICorner")
+uicorner.CornerRadius = UDim.new(0, 12)
+uicorner.Parent = mainFrame
+
+-- Tiêu đề
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Text = "ESP Control"
+title.Font = Enum.Font.Fantasy
+title.TextScaled = true
+title.Parent = mainFrame
+
+-- Button ESP Item
+local buttonESPItem = Instance.new("TextButton")
+buttonESPItem.Size = UDim2.new(0, 180, 0, 40)
+buttonESPItem.Position = UDim2.new(0.5, -90, 0.4, 0)
+buttonESPItem.BackgroundColor3 = Color3.new(0, 0, 0)
+buttonESPItem.TextColor3 = Color3.new(1, 1, 1)
+buttonESPItem.Text = "ESP Item: OFF"
+buttonESPItem.Font = Enum.Font.Fantasy
+buttonESPItem.TextScaled = true
+buttonESPItem.Parent = mainFrame
+
+local cornerItem = Instance.new("UICorner")
+cornerItem.CornerRadius = UDim.new(0, 8)
+cornerItem.Parent = buttonESPItem
+
+-- Button ESP NPC
+local buttonESPNPC = Instance.new("TextButton")
+buttonESPNPC.Size = UDim2.new(0, 180, 0, 40)
+buttonESPNPC.Position = UDim2.new(0.5, -90, 0.7, 0)
+buttonESPNPC.BackgroundColor3 = Color3.new(0, 0, 0)
+buttonESPNPC.TextColor3 = Color3.new(1, 1, 1)
+buttonESPNPC.Text = "ESP NPC: OFF"
+buttonESPNPC.Font = Enum.Font.Fantasy
+buttonESPNPC.TextScaled = true
+buttonESPNPC.Parent = mainFrame
+
+local cornerNPC = Instance.new("UICorner")
+cornerNPC.CornerRadius = UDim.new(0, 8)
+cornerNPC.Parent = buttonESPNPC
+
+-- Biến lưu trạng thái
+getgenv().ESP_Item_Enabled = false
+getgenv().ESP_NPC_Enabled = false
+local espObjects = {}
+
+-- Hàm xóa ESP
+local function clearESP()
+    for _, esp in pairs(espObjects) do
+        if esp and esp.Parent then
+            esp:Destroy()
+        end
+    end
+    espObjects = {}
+end
+
+-- Hàm tạo ESP cho Item
+local function createESPItem(obj)
+    if obj:FindFirstChild("ObjectInfo") and not obj:FindFirstChild("HumanoidRootPart") then
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = obj
+        highlight.FillColor = Color3.new(1, 1, 1)
+        highlight.OutlineColor = Color3.new(1, 1, 1)
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Parent = obj
+        billboard.Size = UDim2.new(0, 100, 0, 20)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.AlwaysOnTop = true
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Parent = billboard
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = obj.Name
+        textLabel.TextColor3 = Color3.new(1, 1, 1)
+        textLabel.TextSize = 10
+        textLabel.Font = Enum.Font.SourceSansBold
+
+        local adorneePart = obj:FindFirstChildWhichIsA("BasePart")
+        if adorneePart then
+            billboard.Adornee = adorneePart
+        else
+            billboard:Destroy()
+        end
+
+        table.insert(espObjects, highlight)
+        table.insert(espObjects, billboard)
+    end
+end
+
+-- Hàm tạo ESP cho NPC
+local function createESPNPC(obj)
+    if obj:FindFirstChild("HumanoidRootPart") and obj:FindFirstChild("Humanoid") then
+        local dangerousMobs = {
+            "Vampire", "Werewolf", 
+            "RifleOutlaw", "ShotgunOutlaw", "RevolverOutlaw"
+        }
+
+        local highlightColor, textColor
+
+        if table.find(dangerousMobs, obj.Name) then
+            highlightColor = Color3.fromRGB(255, 0, 0) -- Đỏ
+            textColor = Color3.fromRGB(255, 0, 0) -- Đỏ
+        elseif obj.Name == "Banker" then
+            highlightColor = Color3.fromRGB(255, 255, 0) -- Vàng
+            textColor = Color3.fromRGB(255, 255, 0) -- Vàng
+        else
+            highlightColor = Color3.fromRGB(0, 255, 0) -- Xanh lá
+            textColor = Color3.fromRGB(0, 255, 0) -- Xanh lá
+        end
+
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = obj
+        highlight.FillColor = highlightColor
+        highlight.OutlineColor = highlightColor
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Parent = obj.HumanoidRootPart
+        billboard.Adornee = obj.HumanoidRootPart
+        billboard.Size = UDim2.new(0, 100, 0, 25)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.AlwaysOnTop = true
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Parent = billboard
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = obj.Name
+        textLabel.TextColor3 = textColor
+        textLabel.TextSize = 14
+        textLabel.Font = Enum.Font.SourceSansBold
+
+        table.insert(espObjects, highlight)
+        table.insert(espObjects, billboard)
+    end
+end
+
+-- Hàm cập nhật ESP
+local function updateESP()
+    while getgenv().ESP_Item_Enabled or getgenv().ESP_NPC_Enabled do
+        clearESP()
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("Model") then
+                if getgenv().ESP_Item_Enabled then
+                    createESPItem(obj)
+                end
+                if getgenv().ESP_NPC_Enabled and obj:FindFirstChild("Humanoid") then
+                    createESPNPC(obj)
+                end
+            end
+        end
+        task.wait(0.2)
+    end
+    clearESP()
+end
+
+-- Kết nối button
+buttonESPItem.MouseButton1Click:Connect(function()
+    getgenv().ESP_Item_Enabled = not getgenv().ESP_Item_Enabled
+    buttonESPItem.Text = getgenv().ESP_Item_Enabled and "ESP Item: ON" or "ESP Item: OFF"
+    task.spawn(updateESP)
+end)
+
+buttonESPNPC.MouseButton1Click:Connect(function()
+    getgenv().ESP_NPC_Enabled = not getgenv().ESP_NPC_Enabled
+    buttonESPNPC.Text = getgenv().ESP_NPC_Enabled and "ESP NPC: ON" or "ESP NPC: OFF"
+    task.spawn(updateESP)
+end)
